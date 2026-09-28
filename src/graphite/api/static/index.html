@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphite — Multimodal GraphRAG Blueprint Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070B14;
+      --panel-bg: rgba(13, 20, 36, 0.85);
+      --card-bg: rgba(20, 30, 55, 0.75);
+      --card-hover: rgba(28, 42, 75, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(14, 165, 233, 0.4);
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent-cyan: #06B6D4;
+      --accent-sky: #0EA5E9;
+      --accent-emerald: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-rose: #F43F5E;
+      --accent-purple: #8B5CF6;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP NAVBAR */
+    header {
+      height: 58px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: #FFF;
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.4);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent-cyan);
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(14, 165, 233, 0.3);
+      font-weight: 600;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .tool-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    .tool-chip.active {
+      background: rgba(14, 165, 233, 0.18);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .nav-stats {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* MAIN WORKSPACE */
+    main {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 58px);
+      position: relative;
+    }
+
+    /* LEFT: CANVAS CONTAINER */
+    #viewer-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background: #050811;
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    #viewer-container:active {
+      cursor: grabbing;
+    }
+
+    #viewport {
+      transform-origin: 0 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #blueprint-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0.55;
+    }
+
+    #overlay-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: visible;
+    }
+
+    /* SVG Elements */
+    .pipe-line {
+      fill: none;
+      stroke: #38BDF8;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.2s, stroke-width 0.2s;
+    }
+
+    .pipe-line.highlighted {
+      stroke: #06B6D4;
+      stroke-width: 4.5;
+      filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.8));
+      stroke-dasharray: 8 4;
+      animation: pipeFlow 1.2s linear infinite;
+    }
+
+    @keyframes pipeFlow {
+      to {
+        stroke-dashoffset: -24;
+      }
+    }
+
+    .equipment-rect {
+      stroke-width: 1.5;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .equipment-rect:hover {
+      stroke-width: 2.5;
+      filter: brightness(1.3);
+    }
+
+    .equipment-node {
+      cursor: pointer;
+      transition: transform 0.2s ease, fill 0.2s ease;
+    }
+
+    .equipment-node:hover {
+      transform: scale(1.35);
+      filter: drop-shadow(0 0 8px currentColor);
+    }
+
+    .equipment-node.target {
+      stroke: #FFF;
+      stroke-width: 2.5;
+      animation: targetPulse 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes targetPulse {
+      from { transform: scale(1.0); }
+      to { transform: scale(1.4); }
+    }
+
+    .node-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      fill: #F1F5F9;
+      pointer-events: none;
+      user-select: none;
+      paint-order: stroke;
+      stroke: #0A0F1D;
+      stroke-width: 3px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* FLOAT CONTROLS ON CANVAS */
+    .canvas-overlay-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--card-hover);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    /* EQUIPMENT INSPECTOR MODAL/CARD */
+    #inspector-card {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 320px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+      z-index: 20;
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .crop-preview {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      background: #000;
+      border: 1px solid var(--border-color);
+      object-fit: contain;
+    }
+
+    .inspector-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .inspector-sub {
+      font-size: 12px;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .inspector-details {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 10px;
+      margin-top: 8px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .detail-row span:last-child {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .inspector-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 7px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      border-color: var(--accent-cyan);
+    }
+
+    /* RIGHT: CHAT & DIALOGUE PANEL */
+    #chat-panel {
+      width: 440px;
+      height: 100%;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    .chat-history {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chat-bubble {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 90%;
+      word-break: break-word;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      color: #FFF;
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+
+    .chat-bubble.assistant h3 {
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--accent-cyan);
+    }
+
+    .chat-bubble.assistant ul {
+      padding-left: 18px;
+      margin: 6px 0;
+    }
+
+    .chat-bubble.assistant li {
+      margin-bottom: 4px;
+    }
+
+    /* CITATION CARDS SHELF */
+    .citations-shelf {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .citations-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .citation-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .crop-chip {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .crop-chip:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(14, 165, 233, 0.15);
+    }
+
+    .crop-chip img {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    /* QUICK SUGGESTIONS */
+    .suggestions {
+      padding: 8px 16px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      border-top: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .suggestion-chip {
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .suggestion-chip:hover {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--text-main);
+    }
+
+    /* CHAT INPUT FORM */
+    .chat-input-bar {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 8px;
+      background: rgba(10, 15, 28, 0.9);
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-sky));
+      border: none;
+      color: #000;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 0 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-send:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">⬡</div>
+      <div>
+        <div class="brand-title">GRAPHITE</div>
+      </div>
+      <span class="brand-tag">MMKG GraphRAG 2.0</span>
+    </div>
+
+    <!-- LAYER TOGGLES -->
+    <div class="toolbar">
+      <div class="tool-chip active" id="toggle-subsystems" onclick="toggleLayer('subsystems')">
+        <span>🗂️</span> Subsystems
+      </div>
+      <div class="tool-chip active" id="toggle-boxes" onclick="toggleLayer('boxes')">
+        <span>📐</span> Bounding Boxes
+      </div>
+      <div class="tool-chip active" id="toggle-flow" onclick="toggleLayer('flow')">
+        <span>⚡</span> Flow Routes
+      </div>
+      <div class="tool-chip" id="toggle-labels" onclick="toggleLayer('labels')">
+        <span>🏷️</span> Labels
+      </div>
+    </div>
+
+    <div class="nav-stats" id="plant-stats">
+      137 Assets • 60 Lines • 31 Subsystems
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main>
+    <!-- LEFT: INTERACTIVE BLUEPRINT CANVAS -->
+    <div id="viewer-container">
+      <div id="viewport">
+        <img id="blueprint-img" src="/api/blueprint/image" alt="Technical Blueprint">
+        <svg id="overlay-svg"></svg>
+      </div>
+
+      <!-- CANVAS ZOOM & PAN CONTROLS -->
+      <div class="canvas-overlay-controls">
+        <button class="btn-icon" onclick="zoomIn()" title="Zoom In">+</button>
+        <button class="btn-icon" onclick="zoomOut()" title="Zoom Out">−</button>
+        <button class="btn-icon" onclick="resetZoom()" title="Reset View">⟲</button>
+      </div>
+
+      <!-- EQUIPMENT INSPECTOR CARD -->
+      <div id="inspector-card">
+        <div class="inspector-header">
+          <img id="insp-crop" class="crop-preview" src="" alt="Symbol Crop">
+          <div>
+            <div id="insp-title" class="inspector-title">P-101</div>
+            <div id="insp-sub" class="inspector-sub">Subsystem-24</div>
+          </div>
+          <button onclick="closeInspector()" style="margin-left:auto;background:none;border:none;color:#999;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div class="inspector-details">
+          <div class="detail-row"><span>Type:</span><span id="insp-type">Pump</span></div>
+          <div class="detail-row"><span>Domain:</span><span id="insp-domain">Process</span></div>
+          <div class="detail-row"><span>Specifications:</span><span id="insp-specs">Standard</span></div>
+          <div class="detail-row"><span>Boundary Valves:</span><span id="insp-valves">None</span></div>
+        </div>
+        <div class="inspector-actions">
+          <button class="btn-action" onclick="askAboutSelected('downstream')">Trace Downstream</button>
+          <button class="btn-action" onclick="askAboutSelected('isolate')">Isolate Asset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: GROUNDED MULTI-TURN DIALOGUE -->
+    <div id="chat-panel">
+      <div class="chat-header">
+        <div class="chat-title">
+          <div class="pulse-dot"></div>
+          Grounded GraphRAG Assistant
+        </div>
+      </div>
+
+      <div class="chat-history" id="chat-history">
+        <!-- Initial assistant greeting -->
+        <div class="chat-bubble assistant">
+          <h3>Welcome to Graphite Blueprint Intelligence</h3>
+          <p>I have ingested the master Multimodal Knowledge Graph for this P&ID. You can ask component questions, flow tracing queries, or plant-wide architectural inquiries.</p>
+        </div>
+      </div>
+
+      <!-- QUICK SUGGESTIONS -->
+      <div class="suggestions">
+        <div class="suggestion-chip" onclick="sendQuickPrompt('What is the downstream flow and required isolation cut-valves for pump P-101 (general13)?')">
+          ⚡ Downstream P-101
+        </div>
+        <div class="suggestion-chip" onclick="sendQuickPrompt('How do I isolate valve99 safely?')">
+          🛡️ Isolate Valve V-101
+        </div>
+        <div class="suggestion-chip" onclick="sendQuickPrompt('Provide an executive plant overview of all functional domains and safety systems.')">
+          🏭 Plant Overview
+        </div>
+        <div class="suggestion-chip" onclick="sendQuickPrompt('Audit engineering compliance rules across the blueprint.')">
+          📋 Audit Rules
+        </div>
+      </div>
+
+      <!-- CHAT INPUT BAR -->
+      <form class="chat-input-bar" id="chat-form" onsubmit="handleChatSubmit(event)">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Ask about equipment, flow routes, or plant safety..." autocomplete="off">
+        <button type="submit" class="btn-send">Send</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Global State
+    let topologyData = null;
+    let selectedNodeId = null;
+    let activeSessionId = "session_" + Math.random().toString(36).substring(2, 9);
+
+    // Viewport transform
+    let scale = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+
+    // Layer states
+    const layers = {
+      subsystems: true,
+      boxes: true,
+      flow: true,
+      labels: false,
+    };
+
+    // Subsystem color palette
+    const PALETTE = [
+      "#E63946", "#457B9D", "#2A9D8F", "#E76F51", "#9B5DE5",
+      "#F4A261", "#00B4D8", "#8338EC", "#06D6A0", "#118AB2",
+      "#D90429", "#FF9F1C", "#2EC4B6", "#7209B7", "#4361EE"
+    ];
+
+    // Initialize application
+    window.addEventListener("DOMContentLoaded", async () => {
+      setupPanAndZoom();
+      await loadBlueprintTopology();
+    });
+
+    // 1. Fetch Topology from REST API
+    async function loadBlueprintTopology() {
+      try {
+        const res = await fetch("/api/blueprint");
+        topologyData = await res.json();
+
+        const img = document.getElementById("blueprint-img");
+        img.width = topologyData.image_width;
+        img.height = topologyData.image_height;
+
+        const svg = document.getElementById("overlay-svg");
+        svg.setAttribute("width", topologyData.image_width);
+        svg.setAttribute("height", topologyData.image_height);
+
+        renderTopology();
+        fitToScreen();
+      } catch (err) {
+        console.error("Failed to load blueprint:", err);
+      }
+    }
+
+    // 2. Render SVG Lines, Bounding Boxes, and Nodes
+    function renderTopology() {
+      const svg = document.getElementById("overlay-svg");
+      svg.innerHTML = "";
+
+      if (!topologyData) return;
+
+      // Group 1: Pipe Lines
+      const edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      edgeGroup.id = "edge-group";
+
+      topologyData.edges.forEach(edge => {
+        if (edge.waypoints && edge.waypoints.length >= 2) {
+          const d = edge.waypoints.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt[0]} ${pt[1]}`).join(" ");
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", d);
+          path.setAttribute("class", "pipe-line");
+          path.setAttribute("id", `edge-${edge.source}-${edge.target}`);
+          edgeGroup.appendChild(path);
+        }
+      });
+      svg.appendChild(edgeGroup);
+
+      // Group 2: Bounding Boxes
+      const boxGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      boxGroup.id = "box-group";
+
+      topologyData.nodes.forEach(node => {
+        if (node.bbox) {
+          const [xmin, ymin, xmax, ymax] = node.bbox;
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("x", xmin);
+          rect.setAttribute("y", ymin);
+          rect.setAttribute("width", xmax - xmin);
+          rect.setAttribute("height", ymax - ymin);
+          rect.setAttribute("id", `box-${node.id}`);
+          rect.setAttribute("class", "equipment-rect");
+
+          const subColor = PALETTE[(node.subsystem_id || 0) % PALETTE.length];
+          rect.setAttribute("stroke", subColor);
+          rect.setAttribute("fill", subColor);
+          rect.setAttribute("fill-opacity", "0.15");
+          rect.onclick = (e) => { e.stopPropagation(); selectNode(node.id); };
+          boxGroup.appendChild(rect);
+        }
+      });
+      svg.appendChild(boxGroup);
+
+      // Group 3: Component Center Nodes
+      const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      nodeGroup.id = "node-group";
+
+      topologyData.nodes.forEach(node => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", node.cx);
+        circle.setAttribute("cy", node.cy);
+        circle.setAttribute("r", 5);
+        circle.setAttribute("id", `node-${node.id}`);
+        circle.setAttribute("class", "equipment-node");
+
+        const subColor = PALETTE[(node.subsystem_id || 0) % PALETTE.length];
+        circle.setAttribute("fill", subColor);
+        circle.setAttribute("stroke", "#070B14");
+        circle.setAttribute("stroke-width", "1.5");
+        circle.onclick = (e) => { e.stopPropagation(); selectNode(node.id); };
+
+        nodeGroup.appendChild(circle);
+      });
+      svg.appendChild(nodeGroup);
+
+      // Group 4: Component Labels
+      const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      labelGroup.id = "label-group";
+      labelGroup.style.display = layers.labels ? "block" : "none";
+
+      topologyData.nodes.forEach(node => {
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", node.cx);
+        text.setAttribute("y", node.cy - 9);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("class", "node-label");
+        text.setAttribute("id", `label-${node.id}`);
+        text.textContent = node.tag || node.id;
+        labelGroup.appendChild(text);
+      });
+      svg.appendChild(labelGroup);
+    }
+
+    // 3. Pan and Zoom Handling
+    function setupPanAndZoom() {
+      const container = document.getElementById("viewer-container");
+      const viewport = document.getElementById("viewport");
+
+      container.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+        const mouseX = e.clientX - container.offsetLeft;
+        const mouseY = e.clientY - container.offsetTop;
+
+        panX = mouseX - (mouseX - panX) * zoomFactor;
+        panY = mouseY - (mouseY - panY) * zoomFactor;
+        scale *= zoomFactor;
+        scale = Math.min(Math.max(0.2, scale), 6.0);
+        updateTransform();
+      });
+
+      container.addEventListener("mousedown", (e) => {
+        if (e.target.closest("#inspector-card")) return;
+        isDragging = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        updateTransform();
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+    }
+
+    function updateTransform() {
+      const viewport = document.getElementById("viewport");
+      viewport.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
+    function zoomIn() {
+      scale = Math.min(scale * 1.25, 6.0);
+      updateTransform();
+    }
+
+    function zoomOut() {
+      scale = Math.max(scale * 0.8, 0.2);
+      updateTransform();
+    }
+
+    function resetZoom() {
+      scale = 1.0;
+      panX = 0;
+      panY = 0;
+      updateTransform();
+    }
+
+    function fitToScreen() {
+      const container = document.getElementById("viewer-container");
+      if (!topologyData) return;
+      const wRatio = container.clientWidth / topologyData.image_width;
+      const hRatio = container.clientHeight / topologyData.image_height;
+      scale = Math.min(wRatio, hRatio) * 0.95;
+      panX = (container.clientWidth - topologyData.image_width * scale) / 2;
+      panY = (container.clientHeight - topologyData.image_height * scale) / 2;
+      updateTransform();
+    }
+
+    function centerOn(cx, cy, targetScale = 1.8) {
+      const container = document.getElementById("viewer-container");
+      scale = targetScale;
+      panX = container.clientWidth / 2 - cx * scale;
+      panY = container.clientHeight / 2 - cy * scale;
+      updateTransform();
+    }
+
+    // 4. Equipment Inspector Card
+    async function selectNode(nodeId) {
+      selectedNodeId = nodeId;
+      const node = topologyData.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      // Highlight target node
+      document.querySelectorAll(".equipment-node").forEach(n => n.classList.remove("target"));
+      const circle = document.getElementById(`node-${nodeId}`);
+      if (circle) circle.classList.add("target");
+
+      // Fetch deep specs
+      try {
+        const res = await fetch(`/api/node/${nodeId}`);
+        const details = await res.json();
+
+        document.getElementById("insp-title").innerText = details.tag ? `${details.tag} (${details.id})` : details.id;
+        document.getElementById("insp-sub").innerText = details.subsystem_name || "Unassigned Subsystem";
+        document.getElementById("insp-type").innerText = details.label.toUpperCase();
+        document.getElementById("insp-domain").innerText = details.domain_category || "Process";
+
+        const specsText = Object.keys(details.specs).length > 0
+          ? Object.entries(details.specs).map(([k, v]) => `${k}: ${v}`).join(", ")
+          : "Standard Rating";
+        document.getElementById("insp-specs").innerText = specsText;
+
+        document.getElementById("insp-valves").innerText = details.isolation_valves.length > 0
+          ? details.isolation_valves.join(", ")
+          : "None Required";
+
+        const cropImg = document.getElementById("insp-crop");
+        cropImg.style.display = "block";
+        cropImg.onerror = () => { cropImg.style.display = "none"; };
+        cropImg.src = details.visual_crop_url;
+
+        document.getElementById("inspector-card").style.display = "block";
+      } catch (err) {
+        console.error("Failed to load node details:", err);
+      }
+    }
+
+    function closeInspector() {
+      document.getElementById("inspector-card").style.display = "none";
+    }
+
+    // 5. Layer Toggles
+    function toggleLayer(layerName) {
+      layers[layerName] = !layers[layerName];
+      const btn = document.getElementById(`toggle-${layerName}`);
+      btn.classList.toggle("active", layers[layerName]);
+
+      if (layerName === "boxes") {
+        const bg = document.getElementById("box-group");
+        if (bg) bg.style.display = layers.boxes ? "block" : "none";
+      } else if (layerName === "labels") {
+        const lg = document.getElementById("label-group");
+        if (lg) lg.style.display = layers.labels ? "block" : "none";
+      } else if (layerName === "subsystems") {
+        // Toggle subsystem coloring vs monochrome
+        topologyData.nodes.forEach(node => {
+          const circle = document.getElementById(`node-${node.id}`);
+          const rect = document.getElementById(`box-${node.id}`);
+          const color = layers.subsystems ? PALETTE[(node.subsystem_id || 0) % PALETTE.length] : "#38BDF8";
+          if (circle) circle.setAttribute("fill", color);
+          if (rect) {
+            rect.setAttribute("stroke", color);
+            rect.setAttribute("fill", color);
+          }
+        });
+      } else if (layerName === "flow") {
+        document.querySelectorAll(".pipe-line.highlighted").forEach(p => {
+          p.style.display = layers.flow ? "block" : "none";
+        });
+      }
+    }
+
+    // Markdown Parser for Grounded GraphRAG Answers
+    function parseMarkdown(md) {
+      if (!md) return "";
+      let formatted = md
+        .replace(/### (.*)/g, '<h3>$1</h3>')
+        .replace(/## (.*)/g, '<h2>$1</h2>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      const lines = formatted.split('\n');
+      let inList = false;
+      let result = [];
+
+      for (let line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          if (!inList) {
+            result.push('<ul>');
+            inList = true;
+          }
+          result.push(`<li>${trimmed.substring(2)}</li>`);
+        } else {
+          if (inList) {
+            result.push('</ul>');
+            inList = false;
+          }
+          if (trimmed.length > 0) {
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol')) {
+              result.push(trimmed);
+            } else {
+              result.push(`<p>${trimmed}</p>`);
+            }
+          }
+        }
+      }
+      if (inList) result.push('</ul>');
+      return result.join('');
+    }
+
+    // 6. Grounded Multi-Turn Dialogue
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById("chat-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendChatMessage("user", message);
+      input.value = "";
+
+      // Loading bubble
+      const loadingId = "loading_" + Date.now();
+      appendChatMessage("assistant", "Analyzing topological knowledge graph & visual symbols...", loadingId);
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, session_id: activeSessionId })
+        });
+        const data = await res.json();
+
+        // Remove loading
+        document.getElementById(loadingId)?.remove();
+
+        // Render grounded answer with citations
+        appendChatMessage("assistant", data.reply, null, data.visual_citations, data.topological_citations);
+
+        // Highlight nodes and pipe paths on the canvas!
+        highlightGraphElements(data.highlighted_node_ids, data.highlighted_edge_ids);
+      } catch (err) {
+        document.getElementById(loadingId)?.remove();
+        appendChatMessage("assistant", "Error connecting to GraphRAG engine: " + err.message);
+      }
+    }
+
+    function appendChatMessage(role, text, elemId = null, visualCitations = [], topoCitations = []) {
+      const history = document.getElementById("chat-history");
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble ${role}`;
+      if (elemId) bubble.id = elemId;
+
+      bubble.innerHTML = parseMarkdown(text);
+
+      // Add Visual Citations Shelf
+      if (visualCitations && visualCitations.length > 0) {
+        const shelf = document.createElement("div");
+        shelf.className = "citations-shelf";
+        shelf.innerHTML = `<div class="citations-label">Visual Citations (${visualCitations.length})</div>`;
+
+        const chips = document.createElement("div");
+        chips.className = "citation-chips";
+
+        visualCitations.forEach(cit => {
+          const chip = document.createElement("div");
+          chip.className = "crop-chip";
+          chip.innerHTML = `<img src="${cit.crop_url}" alt="${cit.node_id}" onerror="this.style.display='none'"><span>${cit.tag || cit.node_id}</span>`;
+          chip.onclick = () => {
+            selectNode(cit.node_id);
+            centerOn(cit.center[0], cit.center[1]);
+          };
+          chips.appendChild(chip);
+        });
+
+        shelf.appendChild(chips);
+        bubble.appendChild(shelf);
+      }
+
+      history.appendChild(bubble);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    function highlightGraphElements(nodeIds = [], edgeIds = []) {
+      if ((!nodeIds || nodeIds.length === 0) && (!edgeIds || edgeIds.length === 0)) return;
+
+      // Highlight target nodes
+      document.querySelectorAll(".equipment-node").forEach(n => n.classList.remove("target"));
+      if (nodeIds && nodeIds.length > 0) {
+        nodeIds.forEach(id => {
+          const circle = document.getElementById(`node-${id}`);
+          if (circle) circle.classList.add("target");
+        });
+      }
+
+      // Highlight flow route pipe lines
+      document.querySelectorAll(".pipe-line").forEach(p => p.classList.remove("highlighted"));
+
+      // 1. Explicit edges from backend
+      if (edgeIds && edgeIds.length > 0) {
+        edgeIds.forEach(([u, v]) => {
+          const p1 = document.getElementById(`edge-${u}-${v}`);
+          const p2 = document.getElementById(`edge-${v}-${u}`);
+          if (p1) p1.classList.add("highlighted");
+          if (p2) p2.classList.add("highlighted");
+        });
+      }
+
+      // 2. Connect highlighted nodes pairwise if no explicit edges provided
+      if ((!edgeIds || edgeIds.length === 0) && nodeIds && nodeIds.length > 1) {
+        for (let i = 0; i < nodeIds.length; i++) {
+          for (let j = i + 1; j < nodeIds.length; j++) {
+            const p1 = document.getElementById(`edge-${nodeIds[i]}-${nodeIds[j]}`);
+            const p2 = document.getElementById(`edge-${nodeIds[j]}-${nodeIds[i]}`);
+            if (p1) p1.classList.add("highlighted");
+            if (p2) p2.classList.add("highlighted");
+          }
+        }
+      }
+
+      // Center on the first highlighted node
+      if (nodeIds && nodeIds.length > 0) {
+        const firstNode = topologyData.nodes.find(n => n.id === nodeIds[0]);
+        if (firstNode) {
+          centerOn(firstNode.cx, firstNode.cy, 1.6);
+        }
+      }
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById("chat-input").value = promptText;
+      document.getElementById("chat-form").dispatchEvent(new Event("submit"));
+    }
+
+    function askAboutSelected(action) {
+      if (!selectedNodeId) return;
+      if (action === "downstream") {
+        sendQuickPrompt(`Show me downstream equipment and flow routes from ${selectedNodeId}`);
+      } else if (action === "isolate") {
+        sendQuickPrompt(`Find the minimal boundary valves required to isolate ${selectedNodeId}`);
+      }
+    }
+  </script>
+</body>
+</html>
