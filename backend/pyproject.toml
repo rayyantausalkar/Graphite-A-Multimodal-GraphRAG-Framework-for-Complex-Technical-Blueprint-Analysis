@@ -29,6 +29,7 @@ dependencies = [
     "easyocr>=1.7.2",
     "fastapi",
     "uvicorn",
+    "httpx>=0.28.1",
 ]
 
 [[tool.uv.index]]

@@ -69,7 +69,7 @@ def create_app(
         graphml_p = Path("data/PID2Graph/Complete/PID2Graph OPEN100/0.graphml").resolve()
         if graphml_p.exists():
             raw_g = parse_graphml(graphml_p, image_path=active_img_path)
-            collapsed_g = collapse_connectors(raw_g, remove_crossings=True)
+            collapsed_g = collapse_connectors(raw_g, remove_crossings=False)
             builder = MMKGBuilder(device="cpu")
             sample_specs = {
                 "general13": {"tag": "P-101", "type": "Centrifugal Feed Pump", "flow": "85 m3/hr", "head": "60 m"},

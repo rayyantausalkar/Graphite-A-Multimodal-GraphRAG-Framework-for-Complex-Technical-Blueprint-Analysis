@@ -72,6 +72,7 @@ def collapse_connectors(
     for start_id in physical_ids:
         # State: (current_node, visited_nodes_set, path_nodes_list, edge_types_list)
         start_center = graph.nodes[start_id].get_center()
+        routing_labels = {"connector"} if remove_crossings else {"connector", "crossing"}
         queue = [(start_id, {start_id}, [start_id], [])]
 
         while queue:
@@ -87,8 +88,8 @@ def collapse_connectors(
                 cur_visited = visited | {nbr}
                 cur_path = path_nodes + [nbr]
 
-                if nbr_lbl == "connector":
-                    # Continue tracing through connector waypoint
+                if nbr_lbl in routing_labels:
+                    # Continue tracing through intermediate waypoint
                     queue.append((nbr, cur_visited, cur_path, cur_types))
                 elif nbr in physical_ids and nbr != start_id:
                     # Found connection to another physical component!
