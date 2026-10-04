@@ -17,7 +17,7 @@ export function GroundBlueprintPlane({
   height,
   scale,
   visible,
-  opacity = 0.65,
+  opacity = 0.95,
 }: GroundBlueprintPlaneProps) {
   const planeWidth = width * scale;
   const planeHeight = height * scale;
@@ -48,13 +48,13 @@ export function GroundBlueprintPlane({
         />
       </mesh>
 
-      {/* Cyber Blueprint Base Grid & Rim Glow */}
+      {/* Engineering Drafting Paper Backing */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[planeWidth + 4, planeHeight + 4]} />
         <meshBasicMaterial
-          color="#040814"
+          color="#FFFFFF"
           transparent
-          opacity={0.92}
+          opacity={1.0}
         />
       </mesh>
     </group>

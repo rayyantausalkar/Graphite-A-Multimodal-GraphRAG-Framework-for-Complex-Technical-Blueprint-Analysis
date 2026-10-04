@@ -111,10 +111,10 @@ export function PipeConduits3D({
           >
             <cylinderGeometry args={[0.045, 0.045, s.length, 6]} />
             <meshStandardMaterial
-              color="#0284C7"
-              metalness={0.7}
-              roughness={0.3}
-              emissive="#0284C7"
+              color="#123B3A"
+              metalness={0.8}
+              roughness={0.25}
+              emissive="#55D6BE"
               emissiveIntensity={0.25}
             />
           </mesh>
@@ -131,11 +131,11 @@ export function PipeConduits3D({
           >
             <cylinderGeometry args={[0.11, 0.11, s.length, 10]} />
             <meshStandardMaterial
-              color="#00E5FF"
-              metalness={0.8}
+              color="#55D6BE"
+              metalness={0.85}
               roughness={0.15}
-              emissive="#00E5FF"
-              emissiveIntensity={0.95}
+              emissive="#55D6BE"
+              emissiveIntensity={1.0}
             />
           </mesh>
         ))}
@@ -146,7 +146,7 @@ export function PipeConduits3D({
         .map((j) => (
           <mesh key={j.key} position={j.position}>
             <sphereGeometry args={[0.048, 6, 6]} />
-            <meshStandardMaterial color="#0284C7" metalness={0.7} roughness={0.3} />
+            <meshStandardMaterial color="#123B3A" metalness={0.8} roughness={0.25} />
           </mesh>
         ))}
 
@@ -157,9 +157,9 @@ export function PipeConduits3D({
           <mesh key={j.key} position={j.position}>
             <sphereGeometry args={[0.115, 8, 8]} />
             <meshStandardMaterial
-              color="#00E5FF"
-              emissive="#00E5FF"
-              emissiveIntensity={0.95}
+              color="#55D6BE"
+              emissive="#55D6BE"
+              emissiveIntensity={1.0}
             />
           </mesh>
         ))}

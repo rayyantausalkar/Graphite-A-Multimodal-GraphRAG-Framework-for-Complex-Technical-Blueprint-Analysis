@@ -59,14 +59,15 @@ export function BlueprintScene3D({
 
   return (
     <div
-      className="relative h-full w-full bg-[#030712]"
+      className="relative h-full w-full bg-[#EFECE6]"
       onMouseMove={(e) => {
         if (hoveredNode) {
           setPointerPos({ x: e.clientX, y: e.clientY });
         }
       }}
     >
-      <Canvas shadows gl={{ antialias: true, alpha: false }}>
+      <Canvas shadows gl={{ antialias: true, alpha: true }}>
+        <color attach="background" args={["#EFECE6"]} />
         <PerspectiveCamera makeDefault position={[0, 48, 55]} fov={42} />
         <OrbitControls
           ref={controlsRef}
@@ -77,16 +78,16 @@ export function BlueprintScene3D({
           maxDistance={220}
         />
 
-        {/* Studio Lighting for Engineering Meshes */}
-        <ambientLight intensity={0.65} />
+        {/* Clean Engineering Daylight Studio Lighting */}
+        <ambientLight intensity={0.9} />
         <directionalLight
           position={[25, 45, 30]}
-          intensity={1.2}
+          intensity={1.1}
           castShadow
           shadow-mapSize={[2048, 2048]}
         />
         <directionalLight position={[-25, 30, -30]} intensity={0.4} />
-        <pointLight position={[0, 15, 0]} intensity={0.5} color="#00E5FF" />
+        <pointLight position={[0, 15, 0]} intensity={0.3} color="#55D6BE" />
 
         <Suspense fallback={null}>
           {/* Ground Blueprint Raster & Grid */}
@@ -142,7 +143,7 @@ export function BlueprintScene3D({
       <div className="absolute bottom-6 right-6 z-30 flex flex-col gap-2">
         <button
           onClick={resetCamera}
-          className="rounded-xl border border-slate-700 bg-slate-900/80 p-2.5 text-slate-300 shadow-xl backdrop-blur-md transition hover:border-cyan-400 hover:text-white"
+          className="rounded-xl border border-[#123B3A]/20 bg-white/95 p-2.5 text-[#123B3A] shadow-lg backdrop-blur-md transition hover:border-[#123B3A] hover:bg-[#F7F6F2]"
           title="Reset Camera View"
         >
           ⟲

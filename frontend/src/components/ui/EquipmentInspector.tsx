@@ -34,11 +34,11 @@ export function EquipmentInspector({
   if (!node) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 w-88 rounded-2xl border border-cyan-500/30 bg-slate-950/85 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-200">
+    <div className="fixed bottom-6 left-6 z-40 w-88 rounded-2xl border border-[#123B3A]/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl text-[#101516] transition-all duration-200">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-cyan-500/30 bg-black/90 p-1">
+          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-[#123B3A]/15 bg-[#F7F6F2] p-1">
             <img
               src={details?.visual_crop_url || node.crop_url}
               alt={node.id}
@@ -49,13 +49,13 @@ export function EquipmentInspector({
             />
           </div>
           <div>
-            <h3 className="font-mono text-base font-bold text-slate-100">
+            <div className="type-technical font-medium text-[#123B3A] tracking-wide">
               {details?.tag || node.tag || node.id}
-            </h3>
-            <p className="font-mono text-xs font-semibold uppercase tracking-wider text-cyan-400">
+            </div>
+            <h4 className="font-brand text-[20px] font-semibold leading-tight text-[#101516]">
               {node.label}
-            </p>
-            <span className="text-[11px] text-slate-400">
+            </h4>
+            <span className="font-body text-[14px] text-[#101516]/70">
               {details?.subsystem_name || node.subsystem_name || "Process Domain"}
             </span>
           </div>
@@ -63,43 +63,43 @@ export function EquipmentInspector({
 
         <button
           onClick={onClose}
-          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          className="rounded-lg p-1.5 text-[#101516]/60 transition hover:bg-[#F7F6F2] hover:text-[#101516]"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {loading ? (
-        <div className="my-6 flex items-center justify-center gap-2 text-xs text-cyan-400">
+        <div className="my-6 flex items-center justify-center gap-2 font-body text-xs text-[#123B3A]">
           <Activity className="h-4 w-4 animate-spin" />
           <span>Loading technical telemetry...</span>
         </div>
       ) : (
         <>
           {/* Engineering Specifications */}
-          <div className="my-4 space-y-1.5 rounded-xl border border-slate-800/80 bg-slate-900/50 p-3 text-xs">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="my-4 space-y-1.5 rounded-xl border border-[#123B3A]/15 bg-[#F7F6F2] p-3 text-xs">
+            <div className="font-brand text-[11px] font-semibold uppercase tracking-wider text-[#101516]/60">
               Technical Specifications
             </div>
             {details?.specs && Object.keys(details.specs).length > 0 ? (
               Object.entries(details.specs).map(([k, v]) => (
                 <div key={k} className="flex justify-between py-0.5">
-                  <span className="capitalize text-slate-400">{k}</span>
-                  <span className="font-mono font-medium text-slate-200">{String(v)}</span>
+                  <span className="font-mono text-[11px] capitalize text-[#101516]/65">{k}</span>
+                  <span className="type-technical text-[#101516] font-medium">{String(v)}</span>
                 </div>
               ))
             ) : (
-              <div className="text-slate-400 italic">Standard Plant Rating</div>
+              <div className="font-body text-[#101516]/50 italic">Standard Plant Rating</div>
             )}
           </div>
 
-          {/* Safety & Isolation Cut-Valves */}
-          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
+          {/* Safety & Isolation Cut-Valves in Warm Gold */}
+          <div className="mb-4 rounded-xl border border-[#E5B93F]/40 bg-[#E5B93F]/15 p-3 text-xs">
+            <div className="flex items-center gap-1.5 font-brand text-xs font-semibold text-[#B45309]">
               <ShieldAlert className="h-3.5 w-3.5" />
               <span>Containment Boundary Valves</span>
             </div>
-            <div className="mt-1 font-mono text-[11px] text-slate-300">
+            <div className="mt-1 font-mono text-[11px] font-medium text-[#101516]">
               {details?.isolation_valves && details.isolation_valves.length > 0
                 ? details.isolation_valves.join(", ")
                 : "No immediate boundary cut-valves required"}
@@ -108,22 +108,22 @@ export function EquipmentInspector({
 
           {/* Upstream & Downstream Flow Previews */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-2">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                <ArrowUpLeft className="h-3 w-3 text-sky-400" />
+            <div className="rounded-lg border border-[#123B3A]/15 bg-[#F7F6F2] p-2">
+              <div className="flex items-center gap-1 font-body text-[11px] text-[#101516]/65">
+                <ArrowUpLeft className="h-3 w-3 text-[#123B3A]" />
                 <span>Upstream ({details?.upstream?.length ?? 0})</span>
               </div>
-              <div className="mt-1 truncate font-mono text-[11px] text-slate-300">
+              <div className="mt-1 truncate font-mono text-[11px] text-[#101516]">
                 {details?.upstream?.slice(0, 2).join(", ") || "None"}
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-2">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                <ArrowDownRight className="h-3 w-3 text-cyan-400" />
+            <div className="rounded-lg border border-[#123B3A]/15 bg-[#F7F6F2] p-2">
+              <div className="flex items-center gap-1 font-body text-[11px] text-[#101516]/65">
+                <ArrowDownRight className="h-3 w-3 text-[#123B3A]" />
                 <span>Downstream ({details?.downstream?.length ?? 0})</span>
               </div>
-              <div className="mt-1 truncate font-mono text-[11px] text-slate-300">
+              <div className="mt-1 truncate font-mono text-[11px] text-[#101516]">
                 {details?.downstream?.slice(0, 2).join(", ") || "None"}
               </div>
             </div>
@@ -133,14 +133,14 @@ export function EquipmentInspector({
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => onAction("downstream", node)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[#123B3A] bg-[#123B3A] px-3 py-2 font-brand text-xs font-semibold text-white shadow-sm transition hover:bg-[#1D4F4D] active:scale-95"
             >
-              <GitFork className="h-3.5 w-3.5" />
+              <GitFork className="h-3.5 w-3.5 text-[#55D6BE]" />
               Trace Flow
             </button>
             <button
               onClick={() => onAction("isolate", node)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[#E5B93F] bg-[#E5B93F]/20 px-3 py-2 font-brand text-xs font-semibold text-[#B45309] transition hover:bg-[#E5B93F] hover:text-white active:scale-95"
             >
               <ShieldAlert className="h-3.5 w-3.5" />
               Isolate

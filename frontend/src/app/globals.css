@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F7F6F2;
+  --foreground: #101516;
+
+  /* Industrial Cyan Light Mode Palette */
+  --industrial-canvas: #F7F6F2;
+  --industrial-surface: #FFFFFF;
+  --industrial-charcoal: #101516;
+  --industrial-teal: #123B3A;
+  --industrial-cyan: #55D6BE;
+  --industrial-gold: #E5B93F;
+  --industrial-cream: #E8E5D5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-industrial-canvas: #F7F6F2;
+  --color-industrial-surface: #FFFFFF;
+  --color-industrial-charcoal: #101516;
+  --color-industrial-teal: #123B3A;
+  --color-industrial-cyan: #55D6BE;
+  --color-industrial-gold: #E5B93F;
+  --color-industrial-cream: #E8E5D5;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-brand: var(--font-space-grotesk), sans-serif;
+  --font-body: var(--font-ibm-plex-sans), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #F7F6F2;
+  color: #101516;
+  font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+}
+
+/* Typography Hierarchy Utilities */
+.font-brand {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-ibm-plex-sans), sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+/* Dedicated Typography Hierarchy Tokens */
+.type-brand {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: clamp(48px, 4vw, 64px);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+
+.type-page-title {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 2.5vw, 40px);
+  line-height: 1.2;
+}
+
+.type-section-title {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 600;
+  font-size: clamp(20px, 1.5vw, 24px);
+  line-height: 1.3;
+}
+
+.type-body {
+  font-family: var(--font-ibm-plex-sans), sans-serif;
+  font-weight: 400;
+  font-size: 15px; /* 14–16px */
+  line-height: 1.55;
+}
+
+.type-technical {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-weight: 500;
+  font-size: 12px; /* 11–13px */
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+/* Custom Industrial Cyan Light Mode Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F6F2;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 59, 58, 0.25);
+  border-radius: 9999px;
+  border: 1px solid rgba(18, 59, 58, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #123B3A;
 }
